@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+
 
 User = get_user_model()
 
@@ -29,3 +31,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         token['email'] = user.email
         return token
+
+
+class CustomRefreshTokenSerializer(TokenRefreshSerializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        refresh = attrs.get('refresh')
+        validated_token = self.context['request'].user.token
+        if validated_token:
+            return {'access': validated_token.access_token}
+        else:
+            raise serializers.ValidationError('Invalid refresh token')

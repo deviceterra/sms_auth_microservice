@@ -5,10 +5,26 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, UserLoginSerializer, CustomTokenObtainPairSerializer
+from .serializers import UserSerializer, UserLoginSerializer, CustomTokenObtainPairSerializer, CustomRefreshTokenSerializer
+from rest_framework_simplejwt.views import TokenRefreshView
+
 
 User = get_user_model()
 
+
+class RefreshTokenView(TokenRefreshView):
+    serializer_class = CustomRefreshTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            return Response({
+                'access': str(serializer.validated_data['access']),
+                'refresh': str(serializer.validated_data['refresh'])
+            })
+
+        return Response(serializer.errors, status=400)
 
 class UserRegistrationAPIView(APIView):
     permission_classes = (AllowAny,)
